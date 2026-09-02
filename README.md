@@ -120,8 +120,9 @@ devin-automation findings --json findings.json
 ### `dispatch`
 
 Collect and dispatch each not-yet-dispatched finding up to the requested
-limits. A real dispatch creates a Devin session and then posts the hidden
-idempotency marker comment:
+limits. A real dispatch posts the hidden idempotency marker comment first, then
+creates the Devin session and rewrites the comment with the session link, so a
+failed session creation cannot leave a marker that suppresses the next run:
 
 ```bash
 devin-automation dispatch --dry-run
