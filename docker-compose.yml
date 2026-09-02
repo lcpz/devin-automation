@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: devin_obs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - devin_obs_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d devin_obs"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  collector:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    command: ["collect", "--json", "/out/snapshot.json"]
+    volumes:
+      - ./out:/out
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dispatcher:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    command: ["dispatch"]
+    profiles: ["manual"]
+
+volumes:
+  devin_obs_data:

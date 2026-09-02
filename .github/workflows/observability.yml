@@ -1,0 +1,47 @@
+name: Devin observability
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: devin-observability
+  cancel-in-progress: false
+
+jobs:
+  observability:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install --quiet '.[postgres]'
+
+      - name: Collect snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          DEVIN_OBS_DATABASE_URL: ${{ secrets.DEVIN_OBS_DATABASE_URL }}
+          DEVIN_OBS_SOURCE: github-actions
+        run: |
+          devin-automation collect --json devin-obs-snapshot.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devin-obs-snapshot
+          path: devin-obs-snapshot.json
