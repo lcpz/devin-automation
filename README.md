@@ -245,6 +245,21 @@ docker exec superset_app /app/.venv/bin/python /tmp/governed_evidence_demo.py
 Raw responses are written to `/tmp/governed_evidence_demo/*.json` inside the
 container. `DEMO_DATASET` overrides the dataset (default `birth_names`).
 
+The same data is viewable in the Superset UI: `superset/build_evidence_dashboard.py`
+builds the published dashboard `governed-evidence` ("Governed Evidence —
+Versioning, Lineage & Retention") over Superset's own metadata tables
+(`version_transaction`, `version_changes`, `tables_version`, `slices_version`,
+`dashboards_version`): retention disclosure, activity feed, versions per asset,
+reverse lineage/blast radius, and a markdown panel mapping each section to the
+REST/MCP surface and the latest export digest.
+
+```bash
+SUPERSET_URL=http://localhost:8088 SUPERSET_USER=admin SUPERSET_PASSWORD=admin \
+SUPERSET_META_URI=postgresql://superset:superset@db:5432/superset \
+EVIDENCE_DIGEST=<digest.value from rest_migration_evidence.json> \
+python superset/build_evidence_dashboard.py
+```
+
 ## Safety guarantees
 
 * Dispatch is idempotent. Every finding has a stable key, and the PR receives a
