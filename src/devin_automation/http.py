@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 JsonDict = dict[str, Any]
@@ -53,7 +53,11 @@ def _request(
         raise RuntimeError(f"{method} {url} -> {exc.code}: {detail[:300]}") from exc
 
 
-def _parse_ts(value: str | None) -> datetime | None:
+def _parse_ts(value: str | int | float | None) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value, tz=UTC)
     if not value:
         return None
     return datetime.fromisoformat(value.replace("Z", "+00:00"))

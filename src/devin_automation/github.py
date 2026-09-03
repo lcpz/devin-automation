@@ -247,6 +247,31 @@ def collect_pull(gh: GitHubClient, pull: JsonDict) -> tuple[PullRow, list[CheckR
     return row, check_rows
 
 
+def _session_row(repo: str, session: JsonDict) -> SessionRow:
+    """Build a normalized session row from a Devin API response."""
+    return SessionRow(
+        session_id=session["session_id"],
+        title=session.get("title"),
+        status=session.get("status"),
+        status_detail=session.get("status_detail"),
+        origin=session.get("origin"),
+        automation_id=session.get("automation_id"),
+        created_at=_iso(_parse_ts(session.get("created_at"))),
+        updated_at=_iso(_parse_ts(session.get("updated_at"))),
+        acus_consumed=float(session.get("acus_consumed") or 0),
+        url=session.get("url"),
+        tags=list(session.get("tags") or []),
+        pr_numbers=sorted(
+            {
+                n
+                for pr in session.get("pull_requests") or []
+                for n in _pr_numbers(repo, pr.get("pr_url", ""))
+            }
+        ),
+        category=session.get("category"),
+    )
+
+
 def collect(gh: GitHubClient, devin: DevinClient, now: datetime) -> Snapshot:
     since = now - LOOKBACK
     pulls: list[PullRow] = []
@@ -258,30 +283,7 @@ def collect(gh: GitHubClient, devin: DevinClient, now: datetime) -> Snapshot:
         pulls.append(row)
         checks.extend(runs)
 
-    sessions = [
-        SessionRow(
-            session_id=s["session_id"],
-            title=s.get("title"),
-            status=s.get("status"),
-            status_detail=s.get("status_detail"),
-            origin=s.get("origin"),
-            automation_id=s.get("automation_id"),
-            created_at=s.get("created_at"),
-            updated_at=s.get("updated_at"),
-            acus_consumed=float(s.get("acus_consumed") or 0),
-            url=s.get("url"),
-            tags=list(s.get("tags") or []),
-            pr_numbers=sorted(
-                {
-                    n
-                    for pr in s.get("pull_requests") or []
-                    for n in _pr_numbers(gh.repo, pr.get("pr_url", ""))
-                }
-            ),
-            category=s.get("category"),
-        )
-        for s in devin.sessions(gh.repo, since)
-    ]
+    sessions = [_session_row(gh.repo, s) for s in devin.sessions(gh.repo, since)]
     automations = []
     for a in devin.automations():
         last = a.get("last_invocation") or {}
