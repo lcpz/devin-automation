@@ -33,9 +33,7 @@ tok = s.post(
     json={"username": USER, "password": PASSWORD, "provider": "db", "refresh": True},
 ).json()["access_token"]
 s.headers["Authorization"] = f"Bearer {tok}"
-s.headers["X-CSRFToken"] = s.get(f"{BASE}/api/v1/security/csrf_token/").json()[
-    "result"
-]
+s.headers["X-CSRFToken"] = s.get(f"{BASE}/api/v1/security/csrf_token/").json()["result"]
 s.headers["Referer"] = BASE
 
 
@@ -83,14 +81,15 @@ DATASETS = {
 SELECT c.id AS change_id, t.issued_at, COALESCE(u.username, '(system)') AS changed_by,
        c.entity_kind, c.entity_id, a.name AS entity_name, a.uuid AS entity_uuid,
        c.kind, c.operation, c.path::text AS path,
-       LEFT(c.from_value::text, 120) AS from_value, LEFT(c.to_value::text, 120) AS to_value,
+       LEFT(c.from_value::text, 120) AS from_value,
+       LEFT(c.to_value::text, 120) AS to_value,
        c.transaction_id
 FROM version_changes c
 JOIN version_transaction t ON t.id = c.transaction_id
 LEFT JOIN ab_user u ON u.id = t.user_id
 LEFT JOIN ({ASSET_NAMES}) a ON a.kind = c.entity_kind AND a.id = c.entity_id
 """,
-    "gov_versions": f"""
+    "gov_versions": """
 WITH v AS (
   SELECT 'dataset' AS kind, id, uuid::text AS uuid, table_name AS name,
          transaction_id, end_transaction_id, operation_type FROM tables_version
@@ -101,7 +100,8 @@ WITH v AS (
 )
 SELECT v.kind, v.id, v.uuid, v.name, v.transaction_id, t.issued_at,
        COALESCE(u.username, '(system)') AS changed_by,
-       CASE v.operation_type WHEN 0 THEN 'insert' WHEN 1 THEN 'update' WHEN 2 THEN 'delete' END AS operation,
+       CASE v.operation_type WHEN 0 THEN 'insert' WHEN 1 THEN 'update'
+            WHEN 2 THEN 'delete' END AS operation,
        (v.end_transaction_id IS NULL) AS is_current
 FROM v JOIN version_transaction t ON t.id = v.transaction_id
 LEFT JOIN ab_user u ON u.id = t.user_id
@@ -448,10 +448,13 @@ EVIDENCE_MD = f"""
 The digest proves the exported bundle was not altered afterwards; it does **not** attest that this
 database is truthful — the bundle says so itself in `coverage.notes`. Everything on this page is read
 live from the same tables the endpoints read (`version_transaction`, `version_changes`, `*_version`).
-"""
+"""  # noqa: E501
 
 rows: list[tuple[str, dict]] = [
-    ("HEADER-1", header("HEADER-1", "What is under version control — and how far back")),
+    (
+        "HEADER-1",
+        header("HEADER-1", "What is under version control — and how far back"),
+    ),
     (
         "ROW-1",
         row(
@@ -465,12 +468,35 @@ rows: list[tuple[str, dict]] = [
         ),
     ),
     ("ROW-2", row("ROW-2", [("retention", 12, 25)])),
-    ("HEADER-2", header("HEADER-2", "Activity — who changed what (what /activity/ returns)")),
+    (
+        "HEADER-2",
+        header("HEADER-2", "Activity — who changed what (what /activity/ returns)"),
+    ),
     ("ROW-3", row("ROW-3", [("activity", 12, 70)])),
-    ("ROW-4", row("ROW-4", [("changes_by_kind", 4, 50), ("versions_per_day", 4, 50), ("most_changed", 4, 50)])),
-    ("HEADER-3", header("HEADER-3", "Lineage — blast radius of a dataset change (get_dataset_usage)")),
+    (
+        "ROW-4",
+        row(
+            "ROW-4",
+            [
+                ("changes_by_kind", 4, 50),
+                ("versions_per_day", 4, 50),
+                ("most_changed", 4, 50),
+            ],
+        ),
+    ),
+    (
+        "HEADER-3",
+        header(
+            "HEADER-3", "Lineage — blast radius of a dataset change (get_dataset_usage)"
+        ),
+    ),
     ("ROW-5", row("ROW-5", [("dependents", 4, 60), ("lineage_table", 8, 60)])),
-    ("HEADER-4", header("HEADER-4", "Evidence — how the export is built and what the digest means")),
+    (
+        "HEADER-4",
+        header(
+            "HEADER-4", "Evidence — how the export is built and what the digest means"
+        ),
+    ),
     ("ROW-6", markdown_row("ROW-6", "MARKDOWN-1", EVIDENCE_MD.strip(), 60)),
 ]
 position = {
