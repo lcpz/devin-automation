@@ -30,13 +30,15 @@ from typing import Any
 from .db import load_snapshot
 from .devin import DevinClient
 from .dispatch import dispatch
-from .github import GitHubClient, _session_row, collect
+from .github import GitHubClient, collect
+from .http import _iso, _parse_ts
 from .models import (
     AutomationRow,
     CheckRun,
     Finding,
     JsonDict,
     PullRow,
+    SessionRow,
     Snapshot,
 )
 
@@ -51,7 +53,16 @@ def _snapshot_from_json(data: JsonDict) -> Snapshot:
             for p in data["pulls"]
         ],
         check_runs=[CheckRun(**c) for c in data["check_runs"]],
-        sessions=[_session_row(data["repo"], s) for s in data["sessions"]],
+        sessions=[
+            SessionRow(
+                **{
+                    **s,
+                    "created_at": _iso(_parse_ts(s.get("created_at"))),
+                    "updated_at": _iso(_parse_ts(s.get("updated_at"))),
+                }
+            )
+            for s in data["sessions"]
+        ],
         automations=[AutomationRow(**a) for a in data["automations"]],
         findings=[Finding(**f) for f in data["findings"]],
     )
