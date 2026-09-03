@@ -54,7 +54,8 @@ GitHub Actions schedule / cron
 The collector examines open, non-draft PRs whose branch starts with `devin/`.
 It ignores informational checks, applies the configured grace period, and
 suppresses findings when a recent commit or active Devin session shows that the
-event-driven flow is already handling the PR. Dispatch records a hidden marker
+event-driven flow is already handling the PR; non-dispatch Devin progress comments
+also count as activity. Dispatch records a hidden marker
 comment on the PR, making retries idempotent.
 
 ## Quickstart with Docker
@@ -214,6 +215,7 @@ ORDER BY kind;
 
 * Dispatch is idempotent. Every finding has a stable key, and the PR receives a
   hidden `devin-obs:dispatch` marker containing the key and created session.
+  Provisional markers expire after the grace period unless they contain a session ID.
 * A dispatch reuses the existing PR branch; it does not create a second PR.
 * Session prompts explicitly prohibit merging, approving, enabling auto-merge,
   and pushing to `master`.

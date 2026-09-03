@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS devin_obs.pull_requests (
   number INT PRIMARY KEY, title TEXT, url TEXT, author TEXT, branch TEXT,
   state TEXT, draft BOOLEAN, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ,
   merged_at TIMESTAMPTZ, head_sha TEXT, last_commit_at TIMESTAMPTZ,
-  failed_at TIMESTAMPTZ, checks TEXT, failed_checks TEXT[],
+  failed_at TIMESTAMPTZ, last_devin_comment_at TIMESTAMPTZ,
+  checks TEXT, failed_checks TEXT[],
   approved BOOLEAN, changes_requested BOOLEAN,
   last_human_review_at TIMESTAMPTZ, review_threads INT, unresolved_threads INT,
   oldest_unresolved_at TIMESTAMPTZ, remediation TEXT, last_seen_at TIMESTAMPTZ
@@ -115,7 +116,7 @@ def load_snapshot(database_url: str, snapshot: Snapshot, source: str) -> None:
                 rem = remediation(pr)
                 cur.execute(
                     """INSERT INTO devin_obs.pull_requests VALUES
-                       (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                       (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                        ON CONFLICT (number) DO UPDATE SET
                          title=EXCLUDED.title, state=EXCLUDED.state,
                          draft=EXCLUDED.draft,
@@ -123,6 +124,7 @@ def load_snapshot(database_url: str, snapshot: Snapshot, source: str) -> None:
                          head_sha=EXCLUDED.head_sha,
                          last_commit_at=EXCLUDED.last_commit_at,
                          failed_at=EXCLUDED.failed_at,
+                         last_devin_comment_at=EXCLUDED.last_devin_comment_at,
                          checks=EXCLUDED.checks, failed_checks=EXCLUDED.failed_checks,
                          approved=EXCLUDED.approved,
                          changes_requested=EXCLUDED.changes_requested,
@@ -146,6 +148,7 @@ def load_snapshot(database_url: str, snapshot: Snapshot, source: str) -> None:
                         pr.head_sha,
                         pr.last_commit_at,
                         pr.failed_at,
+                        pr.last_devin_comment_at,
                         pr.checks,
                         pr.failed_checks,
                         pr.approved,

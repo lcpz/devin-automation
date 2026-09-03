@@ -19,6 +19,9 @@ def test_summarise_checks_ignores_informational_and_flags_failures() -> None:
 
 def test_deleted_review_author_is_counted_as_human() -> None:
     class FakeGitHub:
+        def __init__(self) -> None:
+            self.comments_calls = 0
+
         def check_runs(self, sha: str) -> list[dict[str, Any]]:
             return []
 
@@ -38,10 +41,19 @@ def test_deleted_review_author_is_counted_as_human() -> None:
             return []
 
         def issue_comments(self, number: int) -> list[dict[str, Any]]:
-            return []
+            self.comments_calls += 1
+            return [
+                {
+                    "body": '<!-- devin-obs:dispatch {"key": "marker"} -->',
+                    "created_at": "2026-09-02T00:00:00+00:00",
+                    "html_url": "https://github.com/c/1",
+                    "user": {"login": "devin-ai-integration[bot]"},
+                }
+            ]
 
+    github = FakeGitHub()
     row, _ = collect_pull(
-        FakeGitHub(),
+        github,
         {
             "number": 42,
             "title": "feat",
@@ -56,3 +68,5 @@ def test_deleted_review_author_is_counted_as_human() -> None:
         },
     )
     assert row.unresolved_threads == 1
+    assert row.last_devin_comment_at is None
+    assert github.comments_calls == 1

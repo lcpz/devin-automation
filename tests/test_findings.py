@@ -23,6 +23,7 @@ def _pr(**overrides: Any) -> PullRow:
         "head_sha": "abc123",
         "last_commit_at": _iso(NOW - timedelta(hours=5)),
         "failed_at": None,
+        "last_devin_comment_at": None,
         "checks": "success",
         "failed_checks": [],
         "approved": False,
@@ -58,7 +59,7 @@ def test_failed_ci_without_session_is_a_finding_once() -> None:
     assert findings[0].pr_number == 42
     assert not findings[0].dispatched
 
-    pr.dispatches = [{"key": findings[0].key}]
+    pr.dispatches = [{"key": findings[0].key, "session_id": "s1"}]
     again = derive_findings(_snapshot([pr]), NOW)
     assert again[0].dispatched
 
@@ -148,6 +149,43 @@ def test_session_state_controls_suppression() -> None:
         assert [
             f.kind for f in derive_findings(_snapshot([pr], [session]), NOW)
         ] == expected
+
+
+def test_provisional_dispatch_marker_expires_but_completed_marker_does_not() -> None:
+    pr = _pr(checks="failure", failed_checks=["python-lint"])
+    finding = derive_findings(_snapshot([pr]), NOW)[0]
+
+    pr.dispatches = [
+        {
+            "key": finding.key,
+            "created_at": _iso(NOW - timedelta(minutes=10)),
+        }
+    ]
+    assert derive_findings(_snapshot([pr]), NOW)[0].dispatched
+
+    pr.dispatches[0]["created_at"] = _iso(NOW - timedelta(hours=5))
+    assert not derive_findings(_snapshot([pr]), NOW)[0].dispatched
+
+    pr.dispatches[0] = {"key": finding.key, "session_id": "session-1"}
+    assert derive_findings(_snapshot([pr]), NOW)[0].dispatched
+
+
+def test_recent_devin_progress_comment_suppresses_finding() -> None:
+    recent = _pr(
+        checks="failure",
+        failed_checks=["python-lint"],
+        last_devin_comment_at=_iso(NOW - timedelta(hours=1)),
+    )
+    assert derive_findings(_snapshot([recent]), NOW) == []
+
+    old = _pr(
+        checks="failure",
+        failed_checks=["python-lint"],
+        last_devin_comment_at=_iso(NOW - timedelta(hours=6)),
+    )
+    assert [f.kind for f in derive_findings(_snapshot([old]), NOW)] == [
+        "ci-failed-unattended"
+    ]
 
 
 def test_remediation_classification() -> None:

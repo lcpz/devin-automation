@@ -73,6 +73,13 @@ def _session_active_since(
     return False
 
 
+def _activity_since(sessions: list[SessionRow], pr: PullRow, since: datetime) -> bool:
+    comment_at = _parse_ts(pr.last_devin_comment_at)
+    return _session_active_since(sessions, pr, since) or (
+        comment_at is not None and comment_at >= since
+    )
+
+
 def _add_finding(
     findings: list[Finding],
     pr: PullRow,
@@ -80,8 +87,23 @@ def _add_finding(
     anchor: str,
     detail: str,
     since: str | None,
+    now: datetime,
 ) -> None:
     key = _finding_key(kind, pr, anchor)
+    dispatched = False
+    for marker in pr.dispatches:
+        if marker.get("key") != key:
+            continue
+        if marker.get("session_id"):
+            dispatched = True
+            break
+        try:
+            created_at = _parse_ts(marker.get("created_at"))
+        except ValueError:
+            continue
+        if created_at and created_at >= now - UNATTENDED_GRACE:
+            dispatched = True
+            break
     findings.append(
         Finding(
             key=key,
@@ -91,7 +113,7 @@ def _add_finding(
             branch=pr.branch,
             detail=detail,
             since=since,
-            dispatched=key in {d.get("key") for d in pr.dispatches},
+            dispatched=dispatched,
         )
     )
 
@@ -101,7 +123,7 @@ def derive_findings(snapshot: Snapshot, now: datetime) -> list[Finding]:
     for pr in snapshot.pulls:
         if pr.state != "open" or pr.draft:
             continue
-        add = functools.partial(_add_finding, findings, pr)
+        add = functools.partial(_add_finding, findings, pr, now=now)
         last_commit = _parse_ts(pr.last_commit_at) or _parse_ts(pr.created_at) or now
         quiet_since = now - UNATTENDED_GRACE
         failed_at = _parse_ts(pr.failed_at)
@@ -110,7 +132,7 @@ def derive_findings(snapshot: Snapshot, now: datetime) -> list[Finding]:
         if (
             pr.checks == "failure"
             and ci_since <= quiet_since
-            and not _session_active_since(snapshot.sessions, pr, ci_since)
+            and not _activity_since(snapshot.sessions, pr, ci_since)
         ):
             add(
                 "ci-failed-unattended",
@@ -124,7 +146,7 @@ def derive_findings(snapshot: Snapshot, now: datetime) -> list[Finding]:
             and oldest
             and oldest <= quiet_since
             and last_commit < oldest
-            and not _session_active_since(snapshot.sessions, pr, oldest)
+            and not _activity_since(snapshot.sessions, pr, oldest)
         ):
             add(
                 "review-unaddressed",
@@ -138,7 +160,7 @@ def derive_findings(snapshot: Snapshot, now: datetime) -> list[Finding]:
             and review_at
             and review_at <= quiet_since
             and last_commit < review_at
-            and not _session_active_since(snapshot.sessions, pr, review_at)
+            and not _activity_since(snapshot.sessions, pr, review_at)
         ):
             add(
                 "changes-requested-unaddressed",

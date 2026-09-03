@@ -53,6 +53,7 @@ class PullRow:
     head_sha: str
     last_commit_at: str | None
     failed_at: str | None
+    last_devin_comment_at: str | None
     checks: str  # success | failure | pending | none
     failed_checks: list[str]
     approved: bool

@@ -26,7 +26,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from .devin import DevinClient
-from .dispatch import _dispatch_markers
+from .dispatch import DISPATCH_MARKER, _dispatch_markers
 from .findings import IGNORED_CHECKS, _summarise_checks, derive_findings
 from .http import GITHUB_API, GITHUB_GRAPHQL, _iso, _parse_ts, _request
 from .models import AutomationRow, CheckRun, JsonDict, PullRow, SessionRow, Snapshot
@@ -201,6 +201,16 @@ def collect_pull(gh: GitHubClient, pull: JsonDict) -> tuple[PullRow, list[CheckR
     last_commit_at = max(
         (c["commit"]["committer"]["date"] for c in commits), default=None
     )
+    issue_comments = gh.issue_comments(number)
+    last_devin_comment_at = max(
+        (
+            c["created_at"]
+            for c in issue_comments
+            if (c.get("user") or {}).get("login") == "devin-ai-integration[bot]"
+            and DISPATCH_MARKER not in (c.get("body") or "")
+        ),
+        default=None,
+    )
     failed_at_values = [
         completed_at
         for r in runs
@@ -223,6 +233,7 @@ def collect_pull(gh: GitHubClient, pull: JsonDict) -> tuple[PullRow, list[CheckR
         head_sha=sha,
         last_commit_at=last_commit_at,
         failed_at=max(failed_at_values, default=None),
+        last_devin_comment_at=last_devin_comment_at,
         checks=checks,
         failed_checks=failed,
         approved="APPROVED" in states and "CHANGES_REQUESTED" not in states,
@@ -231,7 +242,7 @@ def collect_pull(gh: GitHubClient, pull: JsonDict) -> tuple[PullRow, list[CheckR
         review_threads=len(threads),
         unresolved_threads=len(unresolved),
         oldest_unresolved_at=oldest,
-        dispatches=_dispatch_markers(gh.issue_comments(number)),
+        dispatches=_dispatch_markers(issue_comments),
     )
     return row, check_rows
 
