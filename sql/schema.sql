@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS devin_obs.pull_requests (
   last_human_review_at TIMESTAMPTZ, review_threads INT, unresolved_threads INT,
   oldest_unresolved_at TIMESTAMPTZ, remediation TEXT, last_seen_at TIMESTAMPTZ
 );
+ALTER TABLE devin_obs.pull_requests
+  ADD COLUMN IF NOT EXISTS last_devin_comment_at TIMESTAMPTZ;
 CREATE TABLE IF NOT EXISTS devin_obs.pull_request_history (
   number INT, collected_at TIMESTAMPTZ, state TEXT, checks TEXT,
   approved BOOLEAN, unresolved_threads INT, remediation TEXT,

@@ -47,7 +47,10 @@ def _snapshot_from_json(data: JsonDict) -> Snapshot:
         collected_at=data["collected_at"],
         repo=data["repo"],
         devin_api_enabled=data["devin_api_enabled"],
-        pulls=[PullRow(**p) for p in data["pulls"]],
+        pulls=[
+            PullRow(**{"failed_at": None, "last_devin_comment_at": None, **p})
+            for p in data["pulls"]
+        ],
         check_runs=[CheckRun(**c) for c in data["check_runs"]],
         sessions=[SessionRow(**s) for s in data["sessions"]],
         automations=[AutomationRow(**a) for a in data["automations"]],
