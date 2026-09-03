@@ -211,6 +211,21 @@ GROUP BY kind
 ORDER BY kind;
 ```
 
+### One-shot dashboard build
+
+`superset/build_dashboard.py` creates (idempotently, via the Superset REST API)
+the "Devin Observability" database connection, five virtual datasets, thirteen
+charts and the published dashboard `devin-observability`:
+
+```bash
+SUPERSET_URL=http://localhost:8088 SUPERSET_USER=admin SUPERSET_PASSWORD=admin \
+DEVIN_OBS_SUPERSET_URI=postgresql://superset:superset@db:5432/devin_obs \
+python superset/build_dashboard.py
+```
+
+`DEVIN_OBS_SUPERSET_URI` is the database URL *as seen from the Superset
+container*, not from the host. Re-running updates the existing objects.
+
 ## Safety guarantees
 
 * Dispatch is idempotent. Every finding has a stable key, and the PR receives a
