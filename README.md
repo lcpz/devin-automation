@@ -1,6 +1,6 @@
 # Devin Automation
 
-Devin Automations are event-driven: a GitHub issue, label, review, comment, or
+Devin Automation runs are event-driven: a GitHub issue, label, review, comment, or
 check-run event can start a Devin session immediately. Event delivery is not
 perfect, however. An automation can be rate-limited, a webhook can be dropped,
 or a session can stop before it reaches the next workflow step.
