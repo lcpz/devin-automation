@@ -233,24 +233,24 @@ charts["kpi_gaps"] = chart(
         "subheader": "CI/review signals no one acted on",
     },
 )
-charts["kpi_hours"] = chart(
-    "Median hours to merge",
+HOURS_PER_PR = 2
+charts["kpi_ets"] = chart(
+    "Engineering time saved (h)",
     "big_number_total",
     "obs_pr_board",
     {
-        "metric": sql_metric(
-            "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours_to_merge)", "p50 hours"
-        ),
+        "metric": sql_metric(f"COUNT(*) * {HOURS_PER_PR}", "hours saved"),
         "adhoc_filters": [
             {
                 "clause": "WHERE",
                 "expressionType": "SQL",
-                "sqlExpression": "merged_at IS NOT NULL",
+                "sqlExpression": "state = 'merged'",
             }
         ],
-        "y_axis_format": ",.1f",
-        "subheader": "PR opened → merged",
+        "y_axis_format": ",d",
+        "subheader": f"{HOURS_PER_PR} h per merged PR/task",
     },
+    f"Engineering time saved: {HOURS_PER_PR} hours per merged Devin PR.",
 )
 charts["board"] = chart(
     "PR status board",
@@ -366,21 +366,20 @@ charts["ci_minutes"] = chart(
 )
 charts["findings"] = chart(
     "Gap findings & dispatches",
-    "table",
+    "echarts_timeseries_bar",
     "obs_findings",
     {
-        "query_mode": "raw",
-        "all_columns": [
-            "kind",
-            "pr_number",
-            "detail",
-            "since",
-            "status",
-            "dispatched",
-            "session_url",
-        ],
-        "row_limit": 100,
-        "table_timestamp_format": "%Y-%m-%d %H:%M",
+        "x_axis": "kind",
+        "groupby": ["status"],
+        "metrics": [COUNT],
+        "stack": "Stack",
+        "orientation": "horizontal",
+        "show_legend": True,
+        "show_value": True,
+        "y_axis_title": "findings",
+        "x_axis_sort_asc": True,
+        "rich_tooltip": True,
+        "color_scheme": "supersetColors",
     },
     "Signals the event-driven automations missed; dispatched=true means a Devin "
     "session was started idempotently.",
@@ -485,7 +484,7 @@ rows: list[tuple[str, dict]] = [
                 ("kpi_merged", 2, 40),
                 ("kpi_failing", 3, 40),
                 ("kpi_gaps", 3, 40),
-                ("kpi_hours", 2, 40),
+                ("kpi_ets", 2, 40),
             ],
         ),
     ),
@@ -539,6 +538,8 @@ dash_payload = {
                 "success": "#5AC189",
                 "failure": "#E04355",
                 "pending": "#FCC700",
+                "resolved": "#5AC189",
+                "open": "#E04355",
             },
         }
     ),
