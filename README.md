@@ -226,40 +226,6 @@ python superset/build_dashboard.py
 `DEVIN_OBS_SUPERSET_URI` is the database URL *as seen from the Superset
 container*, not from the host. Re-running updates the existing objects.
 
-### Product demo: governed migration evidence (lcpz/superset PRs #8-#12)
-
-`superset/governed_evidence_demo.py` exercises the feature the automation
-delivered, end to end, against a running Superset with the `examples` data:
-reverse lineage (`get_dataset_usage`), dataset identity on `get_chart_info`,
-bounded `/versions/` and `/activity/` with retention disclosure, the per-asset
-MCP version/activity tools, and the SHA-256-digested
-`/migration_evidence/` export, which it re-hashes locally to prove the digest.
-It needs the MCP service (`superset mcp run --port 5008`, `MCP_DEV_USERNAME`
-set, `fastmcp` installed) and `superset init` run once so FAB knows the routes:
-
-```bash
-docker cp superset/governed_evidence_demo.py superset_app:/tmp/
-docker exec superset_app /app/.venv/bin/python /tmp/governed_evidence_demo.py
-```
-
-Raw responses are written to `/tmp/governed_evidence_demo/*.json` inside the
-container. `DEMO_DATASET` overrides the dataset (default `birth_names`).
-
-The same data is viewable in the Superset UI: `superset/build_evidence_dashboard.py`
-builds the published dashboard `governed-evidence` ("Governed Evidence —
-Versioning, Lineage & Retention") over Superset's own metadata tables
-(`version_transaction`, `version_changes`, `tables_version`, `slices_version`,
-`dashboards_version`): retention disclosure, activity feed, versions per asset,
-reverse lineage/blast radius, and a markdown panel mapping each section to the
-REST/MCP surface and the latest export digest.
-
-```bash
-SUPERSET_URL=http://localhost:8088 SUPERSET_USER=admin SUPERSET_PASSWORD=admin \
-SUPERSET_META_URI=postgresql://superset:superset@db:5432/superset \
-EVIDENCE_DIGEST=<digest.value from rest_migration_evidence.json> \
-python superset/build_evidence_dashboard.py
-```
-
 ## Safety guarantees
 
 * Dispatch is idempotent. Every finding has a stable key, and the PR receives a
