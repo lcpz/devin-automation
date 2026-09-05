@@ -22,7 +22,7 @@ DB_NAME = "Superset Metadata (versioning)"
 DB_URI = os.environ.get(
     "SUPERSET_META_URI", "postgresql://superset:superset@db:5432/superset"
 )
-DASH_TITLE = "Governed Evidence — Versioning, Lineage & Retention"
+DASH_TITLE = "Governed Evidence - Versioning, Lineage & Retention"
 DASH_SLUG = "governed-evidence"
 RETENTION_DAYS = int(os.environ.get("VERSION_HISTORY_DAYS", "30"))
 DIGEST = os.environ.get("EVIDENCE_DIGEST", "")
@@ -252,7 +252,7 @@ charts["retention"] = chart(
     "history before it is not proof of no change.",
 )
 charts["activity"] = chart(
-    "Activity feed — who changed what (newest first)",
+    "Activity feed - who changed what (newest first)",
     "table",
     "gov_activity",
     {
@@ -324,7 +324,7 @@ charts["most_changed"] = chart(
     },
 )
 charts["lineage_table"] = chart(
-    "Reverse lineage — dataset → charts → dashboards (get_dataset_usage)",
+    "Reverse lineage - dataset → charts → dashboards (get_dataset_usage)",
     "table",
     "gov_lineage",
     {
@@ -433,12 +433,12 @@ digest_line = (
     else "Run `governed_evidence_demo.py` to produce an export and its digest."
 )
 EVIDENCE_MD = f"""
-#### How this maps to the shipped API (PRs #8–#12)
+#### How this maps to the shipped API (PRs #8-#12)
 
 | Step | Surface | What it proves |
 |---|---|---|
 | Identity | `get_chart_info(...).dataset_uuid` (#8) | charts point at datasets by UUID, so evidence survives export/import |
-| Bounded history | `GET /api/v1/dataset/<uuid>/versions/`, `/activity/` (#9) | `count`, `truncated`, `page`, `retention.history_begins_at` — the *Retention disclosure* table above |
+| Bounded history | `GET /api/v1/dataset/<uuid>/versions/`, `/activity/` (#9) | `count`, `truncated`, `page`, `retention.history_begins_at` - the *Retention disclosure* table above |
 | Reverse lineage | `get_dataset_usage` (#10) | the *Reverse lineage* table below, paginated with `truncated` |
 | Agent tools | `get_dataset_versions`, `get_dataset_activity`, `get_chart_versions` … (#11) | same envelope plus an `asset` header |
 | Evidence bundle | `GET /api/v1/dataset/<uuid>/migration_evidence/`, MCP `export_dataset_migration_evidence` (#12) | dependents + before/after snapshots + activity + report/SQL Lab executions + coverage notes, SHA-256 digested |
@@ -446,14 +446,14 @@ EVIDENCE_MD = f"""
 {digest_line}
 
 The digest proves the exported bundle was not altered afterwards; it does **not** attest that this
-database is truthful — the bundle says so itself in `coverage.notes`. Everything on this page is read
+database is truthful - the bundle says so itself in `coverage.notes`. Everything on this page is read
 live from the same tables the endpoints read (`version_transaction`, `version_changes`, `*_version`).
 """  # noqa: E501
 
 rows: list[tuple[str, dict]] = [
     (
         "HEADER-1",
-        header("HEADER-1", "What is under version control — and how far back"),
+        header("HEADER-1", "What is under version control - and how far back"),
     ),
     (
         "ROW-1",
@@ -470,7 +470,7 @@ rows: list[tuple[str, dict]] = [
     ("ROW-2", row("ROW-2", [("retention", 12, 25)])),
     (
         "HEADER-2",
-        header("HEADER-2", "Activity — who changed what (what /activity/ returns)"),
+        header("HEADER-2", "Activity - who changed what (what /activity/ returns)"),
     ),
     ("ROW-3", row("ROW-3", [("activity", 12, 70)])),
     (
@@ -487,14 +487,14 @@ rows: list[tuple[str, dict]] = [
     (
         "HEADER-3",
         header(
-            "HEADER-3", "Lineage — blast radius of a dataset change (get_dataset_usage)"
+            "HEADER-3", "Lineage - blast radius of a dataset change (get_dataset_usage)"
         ),
     ),
     ("ROW-5", row("ROW-5", [("dependents", 4, 60), ("lineage_table", 8, 60)])),
     (
         "HEADER-4",
         header(
-            "HEADER-4", "Evidence — how the export is built and what the digest means"
+            "HEADER-4", "Evidence - how the export is built and what the digest means"
         ),
     ),
     ("ROW-6", markdown_row("ROW-6", "MARKDOWN-1", EVIDENCE_MD.strip(), 60)),

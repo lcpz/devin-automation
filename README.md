@@ -79,7 +79,7 @@ the `db` service hostname; change it when the database is external.
 | Variable | Required | Description | Default |
 | --- | --- | --- | --- |
 | `GITHUB_TOKEN` | Yes for API access | GitHub token with read access to pull requests, checks, reviews, and comments; dispatch also needs comment write access | empty |
-| `GITHUB_REPOSITORY` | Yes | Target repository in `owner/repository` form; there is no repository fallback | — |
+| `GITHUB_REPOSITORY` | Yes | Target repository in `owner/repository` form; there is no repository fallback | - |
 | `DEVIN_API_KEY` | No for GitHub-only collection | Devin v3 API key with the permissions needed to view sessions and create sessions | empty |
 | `DEVIN_ORG_ID` | No for GitHub-only collection | Devin organization identifier | empty |
 | `DEVIN_OBS_DATABASE_URL` | No | Postgres connection URL for the `devin_obs` schema | empty |
@@ -149,9 +149,9 @@ devin-automation load snapshot.json --database-url "$DEVIN_OBS_DATABASE_URL"
 
 Configure these repository secrets before enabling the schedule:
 
-* `DEVIN_API_KEY` — Devin v3 key, if session and automation data is wanted.
-* `DEVIN_ORG_ID` — Devin organization identifier.
-* `DEVIN_OBS_DATABASE_URL` — reachable Postgres URL, if database loading is
+* `DEVIN_API_KEY` - Devin v3 key, if session and automation data is wanted.
+* `DEVIN_ORG_ID` - Devin organization identifier.
+* `DEVIN_OBS_DATABASE_URL` - reachable Postgres URL, if database loading is
   wanted.
 
 GitHub supplies `GITHUB_TOKEN`, and the workflow supplies
@@ -246,7 +246,7 @@ Raw responses are written to `/tmp/governed_evidence_demo/*.json` inside the
 container. `DEMO_DATASET` overrides the dataset (default `birth_names`).
 
 The same data is viewable in the Superset UI: `superset/build_evidence_dashboard.py`
-builds the published dashboard `governed-evidence` ("Governed Evidence —
+builds the published dashboard `governed-evidence` ("Governed Evidence -
 Versioning, Lineage & Retention") over Superset's own metadata tables
 (`version_transaction`, `version_changes`, `tables_version`, `slices_version`,
 `dashboards_version`): retention disclosure, activity feed, versions per asset,

@@ -17,7 +17,7 @@ DB_NAME = "Devin Observability"
 DB_URI = os.environ.get(
     "DEVIN_OBS_SUPERSET_URI", "postgresql://superset:superset@db:5432/devin_obs"
 )
-DASH_TITLE = "Devin Autonomous Delivery — Observability"
+DASH_TITLE = "Devin Autonomous Delivery - Observability"
 DASH_SLUG = "devin-observability"
 
 s = requests.Session()
@@ -474,7 +474,7 @@ def header(hid: str, text: str) -> dict:
 
 
 rows: list[tuple[str, dict]] = [
-    ("HEADER-1", header("HEADER-1", "Is it working? — status at a glance")),
+    ("HEADER-1", header("HEADER-1", "Is it working? - status at a glance")),
     (
         "ROW-1",
         row(
@@ -492,7 +492,7 @@ rows: list[tuple[str, dict]] = [
         "HEADER-2",
         header(
             "HEADER-2",
-            "Delivery — the 5-PR product story, security fixes and automation PRs",
+            "Delivery - the 5-PR product story, security fixes and automation PRs",
         ),
     ),
     ("ROW-2", row("ROW-2", [("board", 8, 75), ("remediation", 4, 75)])),
@@ -501,7 +501,7 @@ rows: list[tuple[str, dict]] = [
         "HEADER-3",
         header(
             "HEADER-3",
-            "Signals — CI health and unattended gaps the periodic review closes",
+            "Signals - CI health and unattended gaps the periodic review closes",
         ),
     ),
     ("ROW-4", row("ROW-4", [("ci_pass", 6, 50), ("ci_minutes", 6, 50)])),
