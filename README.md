@@ -15,6 +15,11 @@ to address each missed gap.
 The implementation uses the GitHub REST and GraphQL APIs, the Devin v3 API,
 stdlib HTTP/JSON handling, and an optional Postgres sink.
 
+For the full story behind this repository (problem framing, the security and
+product work delivered on `lcpz/superset`, the automations, and a demo
+walkthrough), see
+[Autonomous engineering on Superset with Devin](docs/Autonomous%20engineering%20on%20Superset%20with%20Devin.md).
+
 ## Architecture
 
 Event-driven work follows this path:
